@@ -22,7 +22,10 @@ import {
   Quote,
   ShieldCheck,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  User,
+  LogIn,
+  LogOut
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import confetti from 'canvas-confetti';
@@ -31,7 +34,9 @@ import { QUESTION_CATEGORIES } from '@/lib/kurtulus-savasi-data';
 import TimelineModal from '@/components/TimelineModal';
 import NotesDrawer, { PinnedNote } from '@/components/NotesDrawer';
 import HomeworkExportModal, { ChatMessage } from '@/components/HomeworkExportModal';
+import AuthModal from '@/components/AuthModal';
 import { speechService } from '@/lib/speech-service';
+import { useAuth } from '@/lib/auth-context';
 
 const HISTORICAL_PERIODS = [
   { id: 'Tüm Dönem (1919-1923)', label: 'Tüm Millî Mücadele (1919-1923)', desc: 'Samsun\'dan Lozan\'a genel bakış' },
@@ -71,6 +76,12 @@ export default function AtaturkInterviewPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('Tüm Dönem (1919-1923)');
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+
+  // Auth State
+  const { user, logout, isLoading: isAuthLoading } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // Modals & Drawers
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
@@ -413,6 +424,76 @@ export default function AtaturkInterviewPage() {
                 <FileText className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Ödev Çıktısı</span>
               </button>
+
+              {/* User Auth Profile / Login */}
+              {isAuthLoading ? (
+                <div className="px-3 py-1.5 bg-[#E8E2D6] border-2 border-[#1A1A1A] text-xs font-medium animate-pulse">
+                  ...
+                </div>
+              ) : user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="brutal-btn-light px-3 py-1.5 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer bg-[#FFFDF9]"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-[#8B1824] text-white flex items-center justify-center text-[9px] font-bold">
+                      {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="max-w-[80px] sm:max-w-[120px] truncate">{user.name || user.email.split('@')[0]}</span>
+                    <ChevronDown className="w-3 h-3 text-stone-600" />
+                  </button>
+
+                  {/* User Dropdown */}
+                  <AnimatePresence>
+                    {isUserMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="absolute right-0 mt-2 w-56 bg-white border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] z-50 p-2 text-left"
+                      >
+                        <div className="p-2 border-b border-stone-200">
+                          <p className="text-xs font-bold text-stone-900 truncate">{user.name || 'Araştırmacı'}</p>
+                          <p className="text-[11px] text-stone-500 truncate">{user.email}</p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            setIsUserMenuOpen(false);
+                            await logout();
+                          }}
+                          className="w-full mt-1.5 px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors cursor-pointer"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>Çıkış Yap</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      setAuthModalMode('login');
+                      setIsAuthModalOpen(true);
+                    }}
+                    className="brutal-btn-light px-2.5 sm:px-3 py-1.5 text-xs font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                  >
+                    <LogIn className="w-3.5 h-3.5 text-[#8B1824]" />
+                    <span>Giriş</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAuthModalMode('register');
+                      setIsAuthModalOpen(true);
+                    }}
+                    className="hidden sm:flex brutal-btn-red px-2.5 sm:px-3 py-1.5 text-xs font-black uppercase tracking-wider items-center gap-1 cursor-pointer"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>Kayıt Ol</span>
+                  </button>
+                </div>
+              )}
 
               {/* Reset chat */}
               <button
@@ -831,6 +912,12 @@ export default function AtaturkInterviewPage() {
         isOpen={isHomeworkOpen}
         onClose={() => setIsHomeworkOpen(false)}
         messages={messages}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
       />
     </div>
   );

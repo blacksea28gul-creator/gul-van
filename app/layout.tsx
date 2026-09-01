@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import './globals.css';
+import Providers from '@/components/Providers';
 
 export const metadata: Metadata = {
   title: 'Atatürk ile Röportaj - Kurtuluş Savaşı Tarih Chatbotu',
@@ -20,7 +21,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="tr">
       <body suppressHydrationWarning className="bg-[#F8F5F0] text-[#1A1A1A] antialiased selection:bg-[#C8102E] selection:text-white">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
