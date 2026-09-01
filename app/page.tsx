@@ -25,7 +25,8 @@ import {
   RefreshCw,
   User,
   LogIn,
-  LogOut
+  LogOut,
+  Loader2
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import confetti from 'canvas-confetti';
@@ -35,6 +36,7 @@ import TimelineModal from '@/components/TimelineModal';
 import NotesDrawer, { PinnedNote } from '@/components/NotesDrawer';
 import HomeworkExportModal, { ChatMessage } from '@/components/HomeworkExportModal';
 import AuthModal from '@/components/AuthModal';
+import LandingPage from '@/components/LandingPage';
 import { speechService } from '@/lib/speech-service';
 import { useAuth } from '@/lib/auth-context';
 
@@ -357,6 +359,40 @@ export default function AtaturkInterviewPage() {
     return { mainBody: fullText, questionText: null };
   };
 
+  // 1. Loading State
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-[#F8F5F0] flex flex-col items-center justify-center p-4">
+        <div className="w-12 h-12 bg-[#C8102E] text-white flex items-center justify-center font-black text-xl border-2 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] mb-4 animate-bounce">
+          🇹🇷
+        </div>
+        <p className="text-xs font-black uppercase tracking-widest text-[#1A1A1A]">
+          Tarih Arşivi Yükleniyor...
+        </p>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated -> Show Landing Page
+  if (!user) {
+    return (
+      <>
+        <LandingPage
+          onOpenAuth={(mode) => {
+            setAuthModalMode(mode);
+            setIsAuthModalOpen(true);
+          }}
+        />
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialMode={authModalMode}
+        />
+      </>
+    );
+  }
+
+  // 3. Authenticated -> Show Full Chat Interface
   return (
     <div className="min-h-screen bg-[#F8F5F0] text-[#1A1A1A] flex flex-col font-sans selection:bg-[#C8102E] selection:text-white">
       {/* Top Banner / Navigation */}
